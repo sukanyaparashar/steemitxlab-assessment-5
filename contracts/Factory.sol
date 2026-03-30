@@ -1,41 +1,49 @@
-pragma solidity >=0.4.25 <0.6.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
 
-import "./HomeTransaction.sol";
+import './HomeTransaction.sol';
 
 contract Factory {
-  HomeTransaction[] contracts;
+    address[] public contractsList;
 
-  function create(
+    event HomeTransactionCreated(address indexed homeTransaction, address indexed realtor, address indexed seller, address buyer);
+
+    function create(
         string memory _address,
         string memory _zip,
         string memory _city,
-        uint _realtorFee,
-        uint _price,
+        uint256 _realtorFee,
+        uint256 _price,
         address payable _seller,
-        address payable _buyer) public returns(HomeTransaction homeTransaction)  {
-    homeTransaction = new HomeTransaction(
-      _address,
-      _zip,
-      _city,
-      _realtorFee,
-      _price,
-      msg.sender,
-      _seller,
-      _buyer);
-    contracts.push(homeTransaction);
-  }
+        address payable _buyer
+    ) public returns (address homeTransaction) {
+        HomeTransaction instance = new HomeTransaction(
+            _address,
+            _zip,
+            _city,
+            _realtorFee,
+            _price,
+            payable(msg.sender),
+            _seller,
+            _buyer
+        );
 
-  function getInstance(uint index) public view returns (HomeTransaction instance) {
-    require(index < contracts.length, "index out of range");
+        homeTransaction = address(instance);
+        contractsList.push(homeTransaction);
 
-    instance = contracts[index];
-  }
+        emit HomeTransactionCreated(homeTransaction, msg.sender, _seller, _buyer);
+    }
 
-  function getInstances() public view returns (HomeTransaction[] memory instances) {
-    instances = contracts;
-  }
+    function getInstance(uint256 index) public view returns (address instance) {
+        require(index < contractsList.length, 'index out of range');
+        instance = contractsList[index];
+    }
 
-  function getInstanceCount() public view returns (uint count) {
-    count = contracts.length;
-  }
+    function getInstances() public view returns (address[] memory instances) {
+        instances = contractsList;
+    }
+
+    function getInstanceCount() public view returns (uint256 count) {
+        count = contractsList.length;
+    }
 }

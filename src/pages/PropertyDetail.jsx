@@ -1,76 +1,106 @@
-import { useParams, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { FiHome, FiMaximize2, FiCalendar, FiTrendingUp, FiUsers, FiDollarSign, FiGrid } from 'react-icons/fi';
-import { FacebookShareButton, TwitterShareButton, LinkedinShareButton } from 'react-share';
-import { FaFacebook, FaTwitter, FaLinkedin, FaEthereum, FaWallet } from 'react-icons/fa';
+import { useParams, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  FiHome,
+  FiMaximize2,
+  FiCalendar,
+  FiTrendingUp,
+  FiUsers,
+  FiDollarSign,
+  FiGrid,
+} from "react-icons/fi";
+import {
+  FacebookShareButton,
+  TwitterShareButton,
+  LinkedinShareButton,
+} from "react-share";
+import {
+  FaFacebook,
+  FaTwitter,
+  FaLinkedin,
+  FaEthereum,
+  FaWallet,
+} from "react-icons/fa";
+import { useWallet } from "../context/WalletContext";
 
 function PropertyDetail() {
   const { id } = useParams();
 
+  const {
+    isConnected,
+    isCorrectNetwork,
+    expectedName,
+    connect,
+    switchNetwork,
+    isSwitching,
+  } = useWallet();
+
   const property = {
     id: parseInt(id),
-    title: 'Modern Villa with Pool',
+    title: "Modern Villa with Pool",
     price: {
       usd: 850000,
-      eth: 425
+      eth: 425,
     },
-    location: 'Beverly Hills, CA',
-    type: 'villa',
-    roi: '7.2%',
+    location: "Beverly Hills, CA",
+    type: "villa",
+    roi: "7.2%",
     metrics: {
       totalInvestors: 142,
-      funded: '89%',
-      minInvestment: '$10',
-      monthlyIncome: '$520',
-      appreciation: '4.5%',
-      rentalYield: '5.8%',
-      totalReturn: '10.3%'
+      funded: "89%",
+      minInvestment: "$10",
+      monthlyIncome: "$520",
+      appreciation: "4.5%",
+      rentalYield: "5.8%",
+      totalReturn: "10.3%",
     },
-    status: 'Active Investment',
-    description: 'This stunning modern villa offers luxurious living spaces with high-end finishes throughout. The property has been tokenized for fractional ownership, allowing investors to participate in this premium real estate opportunity with as little as $10.',
+    status: "Active Investment",
+    description:
+      "This stunning modern villa offers luxurious living spaces with high-end finishes throughout. The property has been tokenized for fractional ownership, allowing investors to participate in this premium real estate opportunity with as little as $10.",
     features: [
-      'Swimming Pool',
-      'Smart Home System',
-      'Gourmet Kitchen',
-      'Home Theater',
-      'Wine Cellar',
-      'Outdoor Kitchen',
-      'Fire Pit',
-      'Three-Car Garage'
+      "Swimming Pool",
+      "Smart Home System",
+      "Gourmet Kitchen",
+      "Home Theater",
+      "Wine Cellar",
+      "Outdoor Kitchen",
+      "Fire Pit",
+      "Three-Car Garage",
     ],
     tokenDetails: {
       totalTokens: 85000,
       availableTokens: 9350,
-      tokenPrice: '$10',
-      tokenSymbol: 'VILLA425',
-      contractAddress: '0x1234...5678',
-      blockchain: 'Ethereum'
+      tokenPrice: "$10",
+      tokenSymbol: "VILLA425",
+      contractAddress: "0x1234...5678",
+      blockchain: "Ethereum",
     },
     financials: {
-      grossRent: '$8,500/month',
-      netRent: '$7,225/month',
+      grossRent: "$8,500/month",
+      netRent: "$7,225/month",
       expenses: {
-        management: '8%',
-        maintenance: '5%',
-        insurance: '2%',
-        property_tax: '1.2%'
+        management: "8%",
+        maintenance: "5%",
+        insurance: "2%",
+        property_tax: "1.2%",
       },
-      projectedAppreciation: '4.5% annually'
+      projectedAppreciation: "4.5% annually",
     },
     yearBuilt: 2020,
     parkingSpaces: 3,
-    lotSize: '0.5 acres',
+    lotSize: "0.5 acres",
     images: [
-      'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80',
-      'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80'
+      "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80",
+      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80",
+      "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80",
     ],
     agent: {
-      name: 'John Doe',
-      phone: '+1 (555) 123-4567',
-      email: 'john@realestate.com',
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80'
-    }
+      name: "John Doe",
+      phone: "+1 (555) 123-4567",
+      email: "john@realestate.com",
+      image:
+        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80",
+    },
   };
 
   const shareUrl = window.location.href;
@@ -81,9 +111,16 @@ function PropertyDetail() {
       <div className="bg-white shadow">
         <div className="container py-4">
           <div className="flex items-center space-x-2 text-sm">
-            <Link to="/" className="text-secondary-600 hover:text-primary-600">Home</Link>
+            <Link to="/" className="text-secondary-600 hover:text-primary-600">
+              Home
+            </Link>
             <span className="text-secondary-400">/</span>
-            <Link to="/properties" className="text-secondary-600 hover:text-primary-600">Properties</Link>
+            <Link
+              to="/properties"
+              className="text-secondary-600 hover:text-primary-600"
+            >
+              Properties
+            </Link>
             <span className="text-secondary-400">/</span>
             <span className="text-primary-600">{property.title}</span>
           </div>
@@ -130,7 +167,7 @@ function PropertyDetail() {
             >
               <h2 className="text-2xl font-bold mb-4">Property Details</h2>
               <p className="text-secondary-600 mb-6">{property.description}</p>
-              
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="flex items-center space-x-2">
                   {/* <FiBed className="text-primary-600" /> */}
@@ -166,23 +203,35 @@ function PropertyDetail() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-secondary-600">Token Symbol</p>
-                    <p className="font-semibold">{property.tokenDetails.tokenSymbol}</p>
+                    <p className="font-semibold">
+                      {property.tokenDetails.tokenSymbol}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-secondary-600">Token Price</p>
-                    <p className="font-semibold">{property.tokenDetails.tokenPrice}</p>
+                    <p className="font-semibold">
+                      {property.tokenDetails.tokenPrice}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-sm text-secondary-600">Available Tokens</p>
-                    <p className="font-semibold">{property.tokenDetails.availableTokens.toLocaleString()}</p>
+                    <p className="text-sm text-secondary-600">
+                      Available Tokens
+                    </p>
+                    <p className="font-semibold">
+                      {property.tokenDetails.availableTokens.toLocaleString()}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-secondary-600">Total Supply</p>
-                    <p className="font-semibold">{property.tokenDetails.totalTokens.toLocaleString()}</p>
+                    <p className="font-semibold">
+                      {property.tokenDetails.totalTokens.toLocaleString()}
+                    </p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-sm text-secondary-600">Smart Contract</p>
-                    <p className="font-mono text-sm">{property.tokenDetails.contractAddress}</p>
+                    <p className="font-mono text-sm">
+                      {property.tokenDetails.contractAddress}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -195,23 +244,32 @@ function PropertyDetail() {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-secondary-600">Gross Rent</span>
-                      <span className="font-medium">{property.financials.grossRent}</span>
+                      <span className="font-medium">
+                        {property.financials.grossRent}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-secondary-600">Net Rent</span>
-                      <span className="font-medium">{property.financials.netRent}</span>
+                      <span className="font-medium">
+                        {property.financials.netRent}
+                      </span>
                     </div>
                   </div>
                 </div>
                 <div className="bg-secondary-50 rounded-lg p-6">
                   <h4 className="font-semibold mb-4">Expenses</h4>
                   <div className="space-y-2">
-                    {Object.entries(property.financials.expenses).map(([key, value]) => (
-                      <div key={key} className="flex justify-between">
-                        <span className="text-secondary-600">{key.replace('_', ' ').charAt(0).toUpperCase() + key.slice(1)}</span>
-                        <span className="font-medium">{value}</span>
-                      </div>
-                    ))}
+                    {Object.entries(property.financials.expenses).map(
+                      ([key, value]) => (
+                        <div key={key} className="flex justify-between">
+                          <span className="text-secondary-600">
+                            {key.replace("_", " ").charAt(0).toUpperCase() +
+                              key.slice(1)}
+                          </span>
+                          <span className="font-medium">{value}</span>
+                        </div>
+                      ),
+                    )}
                   </div>
                 </div>
               </div>
@@ -232,7 +290,9 @@ function PropertyDetail() {
                   <p className="text-sm text-secondary-500">Investment Price</p>
                   <div className="flex items-center">
                     <FiDollarSign className="text-primary-600" />
-                    <span className="text-2xl font-bold">${property.price.usd.toLocaleString()}</span>
+                    <span className="text-2xl font-bold">
+                      ${property.price.usd.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex items-center text-primary-600">
                     <FaEthereum className="mr-1" />
@@ -252,15 +312,21 @@ function PropertyDetail() {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
                   <span className="text-secondary-600">Rental Yield</span>
-                  <span className="font-medium">{property.metrics.rentalYield}</span>
+                  <span className="font-medium">
+                    {property.metrics.rentalYield}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-secondary-600">Appreciation</span>
-                  <span className="font-medium">{property.metrics.appreciation}</span>
+                  <span className="font-medium">
+                    {property.metrics.appreciation}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-secondary-600">Total Return</span>
-                  <span className="font-medium text-green-600">{property.metrics.totalReturn}</span>
+                  <span className="font-medium text-green-600">
+                    {property.metrics.totalReturn}
+                  </span>
                 </div>
               </div>
 
@@ -280,19 +346,67 @@ function PropertyDetail() {
                   Min Investment: {property.metrics.minInvestment}
                 </p>
               </div>
-              
+
               <Link
                 to={`/property-3d/${id}`}
-                className="btn w-full mb-4 flex items-center justify-center">
+                className="btn w-full mb-4 flex items-center justify-center"
+              >
                 <FiGrid className="mr-2" />
                 View 3D Model
               </Link>
 
-              <button className="btn w-full mb-4 flex items-center justify-center">
-                <FaWallet className="mr-2" />
-                Connect Wallet to Invest
-              </button>
-              
+              {/* ── Invest button — wallet-aware ── */}
+              {!isConnected ? (
+                // Not connected → prompt to connect
+                <button
+                  className="btn w-full mb-4 flex items-center justify-center"
+                  onClick={connect}
+                >
+                  <FaWallet className="mr-2" />
+                  Connect Wallet to Invest
+                </button>
+              ) : !isCorrectNetwork ? (
+                // Connected but wrong network → disable invest, show switch
+                <div className="mb-4">
+                  <button
+                    disabled
+                    className="btn w-full mb-2 flex items-center justify-center opacity-40 cursor-not-allowed"
+                    title={`Switch to ${expectedName} to invest`}
+                  >
+                    <FaWallet className="mr-2" />
+                    Invest Now
+                  </button>
+                  <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mb-2">
+                    <span className="text-xs text-yellow-700">
+                      ⚠️ Switch to <strong>{expectedName}</strong> to invest
+                    </span>
+                  </div>
+                  <button
+                    onClick={switchNetwork}
+                    disabled={isSwitching}
+                    className="w-full py-2 rounded-lg border border-yellow-400 text-yellow-700 text-sm font-semibold hover:bg-yellow-50 disabled:opacity-60 transition-colors"
+                  >
+                    {isSwitching ? "Switching…" : `Switch to ${expectedName}`}
+                  </button>
+                </div>
+              ) : (
+                // Connected + correct network → full action
+                <button
+                  className="btn w-full mb-4 flex items-center justify-center"
+                  onClick={() => {
+                    // TODO: call your contract write method here
+                    // const provider = new ethers.providers.Web3Provider(window.ethereum);
+                    // const signer   = provider.getSigner();
+                    // const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+                    // await contract.invest({ value: ethers.utils.parseEther('0.1') });
+                    console.log("Investing…");
+                  }}
+                >
+                  <FaWallet className="mr-2" />
+                  Invest Now
+                </button>
+              )}
+
               <div className="flex items-center justify-center space-x-4 pt-4 border-t">
                 <FacebookShareButton url={shareUrl}>
                   <FaFacebook className="text-2xl text-blue-600 hover:opacity-80" />
@@ -316,15 +430,19 @@ function PropertyDetail() {
                 />
                 <div>
                   <h3 className="font-semibold">{property.agent.name}</h3>
-                  <p className="text-sm text-secondary-600">Investment Advisor</p>
+                  <p className="text-sm text-secondary-600">
+                    Investment Advisor
+                  </p>
                 </div>
               </div>
               <div className="space-y-2">
                 <p className="text-sm">
-                  <span className="font-medium">Phone:</span> {property.agent.phone}
+                  <span className="font-medium">Phone:</span>{" "}
+                  {property.agent.phone}
                 </p>
                 <p className="text-sm">
-                  <span className="font-medium">Email:</span> {property.agent.email}
+                  <span className="font-medium">Email:</span>{" "}
+                  {property.agent.email}
                 </p>
               </div>
               <button className="btn-secondary w-full mt-4">
