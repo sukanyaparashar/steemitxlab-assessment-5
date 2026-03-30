@@ -1,9 +1,9 @@
-pragma solidity >=0.4.25 <0.6.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
 
 contract HomeTransaction {
-    // Constants
-    uint constant timeBetweenDepositAndFinalization = 5 minutes;
-    uint constant depositPercentage = 10;
+    uint256 public constant TIME_BETWEEN_DEPOSIT_AND_FINALIZATION = 5 minutes;
+    uint256 public constant DEPOSIT_PERCENTAGE = 10;
 
     enum ContractState {
         WaitingSellerSignature,
@@ -11,40 +11,70 @@ contract HomeTransaction {
         WaitingRealtorReview,
         WaitingFinalization,
         Finalized,
-        Rejected }
+        Rejected
+    }
+
+    enum ClosingConditionsReview {
+        Pending,
+        Accepted,
+        Rejected
+    }
+
     ContractState public contractState = ContractState.WaitingSellerSignature;
+    ClosingConditionsReview public closingConditionsReview = ClosingConditionsReview.Pending;
 
-
-    // Roles acting on contract
     address payable public realtor;
     address payable public seller;
     address payable public buyer;
 
-    // Contract details
     string public homeAddress;
     string public zip;
     string public city;
-    uint public realtorFee;
-    uint public price;
+    uint256 public realtorFee;
+    uint256 public price;
+    uint256 public deposit;
+    uint256 public finalizeDeadline;
 
-    // Set when buyer signs and pays deposit
-    uint public deposit;
-    uint public finalizeDeadline;
+    event SellerSigned(address indexed seller);
+    event BuyerSigned(address indexed buyer, uint256 deposit, uint256 finalizeDeadline);
+    event ClosingReviewed(bool accepted);
+    event Finalized(address indexed buyer, uint256 price, uint256 realtorFee);
+    event TransactionRejected(address indexed triggeredBy);
 
-    // Set when realtor reviews closing conditions
-    enum ClosingConditionsReview { Pending, Accepted, Rejected }
-    ClosingConditionsReview closingConditionsReview = ClosingConditionsReview.Pending;
+    modifier onlySeller() {
+        require(seller == msg.sender, 'Only seller can sign contract');
+        _;
+    }
+
+    modifier onlyBuyer() {
+        require(buyer == msg.sender, 'Only buyer can perform this action');
+        _;
+    }
+
+    modifier onlyRealtor() {
+        require(realtor == msg.sender, 'Only realtor can review closing conditions');
+        _;
+    }
+
+    modifier inState(ContractState expectedState) {
+        require(contractState == expectedState, 'Wrong contract state');
+        _;
+    }
 
     constructor(
         string memory _address,
         string memory _zip,
         string memory _city,
-        uint _realtorFee,
-        uint _price,
+        uint256 _realtorFee,
+        uint256 _price,
         address payable _realtor,
         address payable _seller,
-        address payable _buyer) public {
-        require(_price >= _realtorFee, "Price needs to be more than realtor fee!");
+        address payable _buyer
+    ) {
+        require(_seller != address(0) && _buyer != address(0) && _realtor != address(0), 'Invalid participant');
+        require(_seller != _buyer, 'Seller and buyer must differ');
+        require(_price > 0, 'Price must be positive');
+        require(_price >= _realtorFee, 'Price needs to be more than realtor fee!');
 
         realtor = _realtor;
         seller = _seller;
@@ -56,64 +86,68 @@ contract HomeTransaction {
         realtorFee = _realtorFee;
     }
 
-    function sellerSignContract() public payable {
-        require(seller == msg.sender, "Only seller can sign contract");
-
-        require(contractState == ContractState.WaitingSellerSignature, "Wrong contract state");
-
+    function sellerSignContract() public onlySeller inState(ContractState.WaitingSellerSignature) {
         contractState = ContractState.WaitingBuyerSignature;
+        emit SellerSigned(msg.sender);
     }
 
-    function buyerSignContractAndPayDeposit() public payable {
-        require(buyer == msg.sender, "Only buyer can sign contract");
-
-        require(contractState == ContractState.WaitingBuyerSignature, "Wrong contract state");
-
-        require(msg.value >= price*depositPercentage/100 && msg.value <= price, "Buyer needs to deposit between 10% and 100% to sign contract");
+    function buyerSignContractAndPayDeposit() public payable onlyBuyer inState(ContractState.WaitingBuyerSignature) {
+        require(
+            msg.value >= (price * DEPOSIT_PERCENTAGE) / 100 && msg.value <= price,
+            'Buyer needs to deposit between 10% and 100% to sign contract'
+        );
 
         contractState = ContractState.WaitingRealtorReview;
-
         deposit = msg.value;
-        finalizeDeadline = now + timeBetweenDepositAndFinalization;
+        finalizeDeadline = block.timestamp + TIME_BETWEEN_DEPOSIT_AND_FINALIZATION;
+
+        emit BuyerSigned(msg.sender, msg.value, finalizeDeadline);
     }
 
-    function realtorReviewedClosingConditions(bool accepted) public {
-        require(realtor == msg.sender, "Only realtor can review closing conditions");
-
-        require(contractState == ContractState.WaitingRealtorReview, "Wrong contract state");
-
+    function realtorReviewedClosingConditions(bool accepted) public onlyRealtor inState(ContractState.WaitingRealtorReview) {
         if (accepted) {
             closingConditionsReview = ClosingConditionsReview.Accepted;
             contractState = ContractState.WaitingFinalization;
-        } else {
-            closingConditionsReview = ClosingConditionsReview.Rejected;
-            contractState = ContractState.Rejected;
-
-            buyer.transfer(deposit);
+            emit ClosingReviewed(true);
+            return;
         }
+
+        closingConditionsReview = ClosingConditionsReview.Rejected;
+        contractState = ContractState.Rejected;
+        _safeTransfer(buyer, deposit);
+
+        emit ClosingReviewed(false);
+        emit TransactionRejected(msg.sender);
     }
 
-    function buyerFinalizeTransaction() public payable {
-        require(buyer == msg.sender, "Only buyer can finalize transaction");
-
-        require(contractState == ContractState.WaitingFinalization, "Wrong contract state");
-
-        require(msg.value + deposit == price, "Buyer needs to pay the rest of the cost to finalize transaction");
+    function buyerFinalizeTransaction() public payable onlyBuyer inState(ContractState.WaitingFinalization) {
+        require(msg.value == price - deposit, 'Buyer needs to pay the exact remaining cost');
 
         contractState = ContractState.Finalized;
 
-        seller.transfer(price-realtorFee);
-        realtor.transfer(realtorFee);
+        _safeTransfer(seller, price - realtorFee);
+        _safeTransfer(realtor, realtorFee);
+
+        emit Finalized(msg.sender, price, realtorFee);
     }
 
-    function anyWithdrawFromTransaction() public {
-        require(buyer == msg.sender || finalizeDeadline <= now, "Only buyer can withdraw before transaction deadline");
-
-        require(contractState == ContractState.WaitingFinalization, "Wrong contract state");
+    function anyWithdrawFromTransaction() public inState(ContractState.WaitingFinalization) {
+        require(
+            msg.sender == buyer || msg.sender == seller || msg.sender == realtor,
+            'Only transaction participants can withdraw'
+        );
+        require(msg.sender == buyer || finalizeDeadline <= block.timestamp, 'Only buyer can withdraw before transaction deadline');
 
         contractState = ContractState.Rejected;
 
-        seller.transfer(deposit-realtorFee);
-        realtor.transfer(realtorFee);
+        _safeTransfer(seller, deposit - realtorFee);
+        _safeTransfer(realtor, realtorFee);
+
+        emit TransactionRejected(msg.sender);
+    }
+
+    function _safeTransfer(address payable recipient, uint256 amount) internal {
+        (bool success, ) = recipient.call{value: amount}('');
+        require(success, 'Transfer failed');
     }
 }

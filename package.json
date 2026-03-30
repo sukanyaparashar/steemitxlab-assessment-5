@@ -57,7 +57,9 @@
     "client": "react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
-    "eject": "echo \"Not Support eject\""
+    "eject": "echo \"Not Support eject\"",
+    "test:server": "node --test server/tests/*.test.js",
+    "test:contracts": "node --test server/tests/contracts-source.test.js"
   },
   "eslintConfig": {
     "extends": [
@@ -86,6 +88,7 @@
     "process": "^0.11.10",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
+    "typescript": "^5.9.3",
     "url": "^0.11.0"
   }
 }

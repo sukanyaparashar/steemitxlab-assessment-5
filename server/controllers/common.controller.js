@@ -1,74 +1,72 @@
-const mongoose = require('mongoose');
-var state_model = require('../models/state');
-var city_model = require('../models/city');
-var users = require('../models/users');
+const state_model = require('../models/state');
+const city_model = require('../models/city');
+const users = require('../models/users');
 
 module.exports = {
-  getStateList: (req, res) => {
-    state_model.find({ is_active: true })
-      .exec((err, data) => {
-        if (err)
-          res.status(400).send(err);
-        res.status(200).send(data);
-      });
+  getStateList: async (req, res) => {
+    try {
+      const data = await state_model.find({ is_active: true }).exec();
+      return res.status(200).send(data);
+    } catch (err) {
+      return res.status(400).send(err);
+    }
   },
-  addState: (req, res) => {
-    var state = new state_model();
-    state.name = req.body.name;
 
-    state.save((err) => {
-      if (err)
-        res.send(err);
-      res.json({ message: 'State added successfully' });
-    })
+  addState: async (req, res) => {
+    try {
+      const state = new state_model({ name: req.body.name });
+      await state.save();
+      return res.json({ message: 'State added successfully' });
+    } catch (err) {
+      return res.status(400).json({ message: err.message });
+    }
   },
-  getAllCities: (req, res) => {
-    city_model.find({ is_active: true })
-      .populate('state_id', 'name')
-      .exec((err, data) => {
-        if (err)
-          res.status(400).send(err);
-        res.status(200).json(data);
-      });
+
+  getAllCities: async (req, res) => {
+    try {
+      const data = await city_model.find({ is_active: true }).populate('state_id', 'name').exec();
+      return res.status(200).json(data);
+    } catch (err) {
+      return res.status(400).send(err);
+    }
   },
-  getCityList: (req, res) => {
-    city_model.find({ state_id: req.params.state_id, is_active: true })
-      .populate('state_id', 'name')
-      .exec((err, data) => {
-        if (err)
-          res.status(400).send(err);
-        res.status(200).json(data);
-      });
+
+  getCityList: async (req, res) => {
+    try {
+      const data = await city_model.find({ state_id: req.params.state_id, is_active: true }).populate('state_id', 'name').exec();
+      return res.status(200).json(data);
+    } catch (err) {
+      return res.status(400).send(err);
+    }
   },
+
   addCity: async (req, res) => {
     try {
-      var city = new city_model(req.body);
+      const city = new city_model(req.body);
       const result = await city.save();
-      console.log({ result });
-      if (result) res.status(200).json({ message: 'City added successfully' });
-      else throw new Error('Something Went Wrong');
-    }
-    catch (err) {
-      res.status(400).json({ message: err.message });
+      if (!result) throw new Error('Something Went Wrong');
+      return res.status(200).json({ message: 'City added successfully' });
+    } catch (err) {
+      return res.status(400).json({ message: err.message });
     }
   },
-  removeCity: (req, res) => {
-    city_model.remove({ _id: req.params.cityId }, (err, result) => {
-      if (err)
-        res.status(400).send(err);
-      res.status(200).json({ message: 'City removed successfully', data: result });
-    })
-  },
-  checkemailAvailability: (req, res) => {
-    var email = req.params.email;
 
-    users.find({ email: email }, (err, result) => {
-      if (err)
-        res.status(400).send(err);
-      else if (result.length > 0)
-        res.status(200).json({ response: true });
-      else
-        res.status(200).json({ response: false });
-    });
-  }
-}
+  removeCity: async (req, res) => {
+    try {
+      const result = await city_model.deleteOne({ _id: req.params.cityId });
+      return res.status(200).json({ message: 'City removed successfully', data: result });
+    } catch (err) {
+      return res.status(400).send(err);
+    }
+  },
+
+  checkemailAvailability: async (req, res) => {
+    try {
+      const email = req.params.email;
+      const result = await users.find({ email }).exec();
+      return res.status(200).json({ response: result.length > 0 });
+    } catch (err) {
+      return res.status(400).send(err);
+    }
+  },
+};
